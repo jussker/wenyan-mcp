@@ -85,7 +85,7 @@ npm install -g @wenyan-md/mcp
 
 ### 本地联动 `wenyan-core`（workspace）
 
-仓库已启用 pnpm workspace，`libs/` 目录用于放置本地 `wenyan-core`（例如 `https://github.com/jussker/wenyan-core`）。
+仓库已启用 pnpm workspace，`libs/` 目录用于放置本地 `wenyan-core` （例如 `https://github.com/jussker/wenyan-core`）。
 
 ```bash
 git submodule add https://github.com/jussker/wenyan-core libs/wenyan-core
