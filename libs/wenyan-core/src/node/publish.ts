@@ -12,6 +12,15 @@ import { uploadCacheStore } from "./uploadCacheStore.js";
 const { uploadMaterial, publishArticle, fetchAccessToken } = createWechatClient(nodeHttpAdapter);
 const mediaIdMapping = new Map<string, string>(); // 微信 url 和 media_id 的映射
 
+function isWechatMaterialUrl(url: string): boolean {
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === "https:" && parsed.hostname.toLowerCase() === "mmbiz.qpic.cn";
+    } catch {
+        return false;
+    }
+}
+
 export interface WechatPublishOptions {
     appId?: string;
     appSecret?: string;
@@ -118,7 +127,7 @@ async function uploadImages(
     const uploadPromises = images.map(async (element) => {
         const dataSrc = element.getAttribute("src");
         if (dataSrc) {
-            if (!dataSrc.startsWith("https://mmbiz.qpic.cn")) {
+            if (!isWechatMaterialUrl(dataSrc)) {
                 const resp = await uploadImage(dataSrc, accessToken, undefined, relativePath);
                 element.setAttribute("src", resp.url);
                 return resp.media_id;
@@ -168,7 +177,7 @@ export async function publishToWechatDraft(
         }
     } else {
         // 如果是 URL，需要重新上传作为封面，为了获取 media_id
-        if (firstImageId.startsWith("https://mmbiz.qpic.cn")) {
+        if (isWechatMaterialUrl(firstImageId)) {
             const cachedThumbMediaId = mediaIdMapping.get(firstImageId);
             if (cachedThumbMediaId) {
                 thumbMediaId = cachedThumbMediaId;

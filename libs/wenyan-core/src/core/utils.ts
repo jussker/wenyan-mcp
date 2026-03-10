@@ -28,7 +28,7 @@ export function stringToMap(str: string): Map<string, string> {
 
 export function replaceCSSVariables(css: string): string {
     // 正则表达式用于匹配变量定义
-    const variablePattern: RegExp = /--([a-zA-Z0-9\-]+):\s*([^;()]*\((?:[^()]*|\([^()]*\))*\)[^;()]*|[^;]+);/g;
+    const variablePattern: RegExp = /--([a-zA-Z0-9\-]+):\s*([^;\n]+);/g;
     // 正则表达式用于匹配使用 var() 的地方
     const varPattern: RegExp = /var\(--([a-zA-Z0-9\-]+)\)/g;
 
