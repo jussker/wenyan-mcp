@@ -42,6 +42,10 @@
     "prepublishOnly": "pnpm upgrade:core && pnpm build"
   },
   "packageManager": "pnpm@10.7.1",
+  "pnpm": {
+    "linkWorkspacePackages": true,
+    "preferWorkspacePackages": true
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "0.6.0",
     "@wenyan-md/core": "^2.0.8",
