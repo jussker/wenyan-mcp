@@ -400,7 +400,7 @@ function requireClientMethod<T extends keyof WechatExtendedClient>(name: T): Non
     const method = typedWechatClient[name];
     if (typeof method !== "function") {
         throw new Error(
-            `wenyan-core currently does not expose "${String(name)}". Please use the forked jussker/wenyan-core version that includes this API.`,
+            `wenyan-core currently does not expose "${String(name)}". Please use the forked jussker/wenyan-core version (https://github.com/jussker/wenyan-core) that includes this API.`,
         );
     }
     return method as NonNullable<WechatExtendedClient[T]>;
