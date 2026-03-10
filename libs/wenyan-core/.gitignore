@@ -1,0 +1,8 @@
+node_modules/
+build/
+dist/
+*.log
+.env*
+*.tsbuildinfo
+pnpm-lock.yaml
+tests/__snapshots__/

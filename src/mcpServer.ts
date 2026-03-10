@@ -2,12 +2,23 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { LIST_THEMES_SCHEMA, REGISTER_THEME_SCHEMA, REMOVE_THEME_SCHEMA } from "./theme.js";
 import { PUBLISH_ARTICLE_SCHEMA, publishArticle } from "./publish.js";
+import {
+    LIST_CLIENT_PUBLISH_API_ENDPOINTS_SCHEMA,
+    LIST_WECHAT_API_ENDPOINTS_SCHEMA,
+    listClientPublishApiEndpoints,
+    listWechatApiEndpoints,
+} from "./wechatApi.js";
 import pkg from "../package.json" with { type: "json" };
 import { buildMcpResponse, globalStates } from "./utils.js";
 import { addTheme, listThemes, removeTheme } from "@wenyan-md/core/wrapper";
 
 /**
- * Create and configure an MCP server instance.
+ * Create and configure the MCP server instance.
+ *
+ * @remarks
+ * MCP request lifecycle in this project:
+ * - `ListToolsRequestSchema`: exposes tool schemas to MCP clients
+ * - `CallToolRequestSchema`: validates/runs tool handlers and returns text responses
  */
 export function createServer(): Server {
     const server = new Server(
@@ -25,20 +36,19 @@ export function createServer(): Server {
         },
     );
 
-    /**
-     * Handler that lists available tools.
-     * Exposes a single "publish_article" tool that lets clients publish new article.
-     */
     server.setRequestHandler(ListToolsRequestSchema, async () => {
         return {
-            tools: [PUBLISH_ARTICLE_SCHEMA, LIST_THEMES_SCHEMA, REGISTER_THEME_SCHEMA, REMOVE_THEME_SCHEMA],
+            tools: [
+                PUBLISH_ARTICLE_SCHEMA,
+                LIST_THEMES_SCHEMA,
+                REGISTER_THEME_SCHEMA,
+                REMOVE_THEME_SCHEMA,
+                LIST_WECHAT_API_ENDPOINTS_SCHEMA,
+                LIST_CLIENT_PUBLISH_API_ENDPOINTS_SCHEMA,
+            ],
         };
     });
 
-    /**
-     * Handler for the publish_article tool.
-     * Publish a new article with the provided title and content, and returns success message.
-     */
     server.setRequestHandler(CallToolRequestSchema, async (request) => {
         try {
             if (request.params.name === "publish_article") {
@@ -84,6 +94,10 @@ export function createServer(): Server {
                 const name = String(request.params.arguments?.name || "");
                 await removeTheme(name);
                 return buildMcpResponse(`Theme "${name}" has been removed successfully.`);
+            } else if (request.params.name === "list_wechat_api_endpoints") {
+                return listWechatApiEndpoints();
+            } else if (request.params.name === "list_client_publish_api_endpoints") {
+                return listClientPublishApiEndpoints();
             }
 
             throw new Error("Unknown tool");

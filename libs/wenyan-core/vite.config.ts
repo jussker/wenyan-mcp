@@ -1,0 +1,46 @@
+/// <reference types="vitest" />
+import { resolve } from "node:path";
+import { defineConfig, loadEnv } from "vite";
+
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), "");
+
+    return {
+        build: {
+            lib: {
+                entry: {
+                    core: resolve(__dirname, "src/core/index.ts"),
+                    publish: resolve(__dirname, "src/node/publish.ts"),
+                    wrapper: resolve(__dirname, "src/node/wrapper.ts"),
+                    wechat: resolve(__dirname, "src/wechat.ts"),
+                },
+                fileName: (format, entryName) => `${entryName}.js`,
+                formats: ["es"],
+            },
+            sourcemap: false,
+            ssr: true,
+            rollupOptions: {
+                external: [
+                    "marked",
+                    "marked-highlight",
+                    "highlight.js",
+                    "front-matter",
+                    "formdata-node",
+                    "css-tree",
+                    "jsdom",
+                    "mathjax-full/js/mathjax.js",
+                    "mathjax-full/js/input/tex.js",
+                    "mathjax-full/js/output/svg.js",
+                    "mathjax-full/js/adaptors/liteAdaptor.js",
+                    "mathjax-full/js/handlers/html.js",
+                    "mathjax-full/js/input/tex/AllPackages.js",
+                ],
+            },
+        },
+        test: {
+            // globals: true,
+            include: ["tests/**/*.test.js", "tests/**/*.test.ts"],
+            env,
+        },
+    };
+});

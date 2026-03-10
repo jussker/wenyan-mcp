@@ -1,6 +1,23 @@
 import { renderAndPublish, renderAndPublishToServer } from "@wenyan-md/core/wrapper";
 import { buildMcpResponse, getInputContent, globalStates } from "./utils.js";
 
+/**
+ * MCP tool schema for rendering Markdown and publishing a draft to WeChat.
+ *
+ * @remarks
+ * Input priority:
+ * 1. `file`
+ * 2. `content_url`
+ * 3. `content`
+ *
+ * `file` SPEC:
+ * - Absolute path: `/home/user/articles/post.md`
+ * - Relative path: `./articles/post.md`
+ *
+ * `content` SPEC:
+ * - Plain Markdown string
+ * - Frontmatter is supported when provided at the top of content
+ */
 export const PUBLISH_ARTICLE_SCHEMA = {
     name: "publish_article",
     description: "Format a Markdown article using a selected theme and publish it to '微信公众号'.",
