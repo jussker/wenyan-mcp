@@ -85,13 +85,13 @@ npm install -g @wenyan-md/mcp
 
 ### 本地联动 `wenyan-core`（workspace）
 
-仓库已启用 pnpm workspace, `libs/` 目录用于放置本地 `wenyan-core` （例如 `https://github.com/jussker/wenyan-core`）。
+仓库已启用 pnpm workspace, `libs/` 目录用于放置本地 `wenyan-core` (例如 `https://github.com/jussker/wenyan-core`)。
 
 ```bash
 git submodule add https://github.com/jussker/wenyan-core libs/wenyan-core
 ```
 
-当 `libs/wenyan-core` 存在时，`@wenyan-md/core` 会优先链接到本地 workspace 包，方便你在一个 mono repo 中联动修改与调试。
+当 `libs/wenyan-core` 存在时，`@wenyan-md/core` 会优先链接到本地 workspace 包，方便你在一个 monorepo 中联动修改与调试。
 
 ## 基本用法
 
