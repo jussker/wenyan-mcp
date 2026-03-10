@@ -1,6 +1,15 @@
 import { renderAndPublish, renderAndPublishToServer } from "@wenyan-md/core/wrapper";
 import { buildMcpResponse, getInputContent, globalStates } from "./utils.js";
 
+/**
+ * MCP 工具：渲染 Markdown 并发布到公众号草稿箱。
+ *
+ * @remarks
+ * 输入优先级：`file` / `content_url` > `content`。
+ * `file` 路径格式 SPEC：
+ * - 允许绝对路径或相对路径（相对 `process.cwd()`）
+ * - 必须是 UTF-8 Markdown 文件（建议 `.md`）
+ */
 export const PUBLISH_ARTICLE_SCHEMA = {
     name: "publish_article",
     description: "Format a Markdown article using a selected theme and publish it to '微信公众号'.",
@@ -31,6 +40,16 @@ export const PUBLISH_ARTICLE_SCHEMA = {
     },
 } as const;
 
+/**
+ * 发布文章到公众号草稿箱。
+ *
+ * @param contentUrl - 远程 Markdown URL。
+ * @param file - 本地 Markdown 文件路径。
+ * @param content - Markdown 文本内容。
+ * @param themeId - 主题 ID。
+ * @param clientVersion - 可选客户端版本。
+ * @returns MCP 文本响应对象。
+ */
 export async function publishArticle(contentUrl: string, file: string, content: string, themeId: string, clientVersion?: string) {
     let mediaId = "";
     const publishOptions = {

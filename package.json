@@ -32,6 +32,8 @@
   "scripts": {
     "build": "tsc",
     "inspector": "pnpm build && node ./run-inspector.js",
+    "test:tools": "pnpm build && node ./tests/listTools.js",
+    "test:wechat-validation": "pnpm build && node ./tests/wechatValidation.js",
     "test:list": "pnpm build && dotenv -e .env.test -- node ./tests/list.js",
     "test:publish": "pnpm build && dotenv -e .env.test -- node ./tests/publish.js",
     "test:register": "pnpm build && dotenv -e .env.test -- node ./tests/registerTheme.js",
