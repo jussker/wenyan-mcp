@@ -25,16 +25,16 @@ const wechatClient = createWechatClient(nodeHttpAdapter);
 interface WechatExtendedClient {
     fetchAccessToken(appId: string, appSecret: string): Promise<{ access_token: string }>;
     fetchStableAccessToken?(appId: string, appSecret: string): Promise<{ access_token: string }>;
-    uploadMaterial(type: string, file: Blob, filename: string, accessToken: string): Promise<object>;
-    batchGetMaterial(accessToken: string, type: string, offset: number, count: number): Promise<object>;
-    deleteMaterial(accessToken: string, mediaId: string): Promise<object>;
-    draftBatchGet(accessToken: string, offset: number, count: number, noContent: number): Promise<object>;
-    getDraft(accessToken: string, mediaId: string): Promise<object>;
-    draftDelete(accessToken: string, mediaId: string): Promise<object>;
-    freepublishSubmit(accessToken: string, mediaId: string): Promise<object>;
-    freepublishGet(accessToken: string, publishId: string): Promise<object>;
-    freepublishBatchGet(accessToken: string, offset: number, count: number): Promise<object>;
-    freepublishDelete(accessToken: string, articleId: string): Promise<object>;
+    uploadMaterial?(type: string, file: Blob, filename: string, accessToken: string): Promise<object>;
+    batchGetMaterial?(accessToken: string, type: string, offset: number, count: number): Promise<object>;
+    deleteMaterial?(accessToken: string, mediaId: string): Promise<object>;
+    draftBatchGet?(accessToken: string, offset: number, count: number, noContent: number): Promise<object>;
+    getDraft?(accessToken: string, mediaId: string): Promise<object>;
+    draftDelete?(accessToken: string, mediaId: string): Promise<object>;
+    freepublishSubmit?(accessToken: string, mediaId: string): Promise<object>;
+    freepublishGet?(accessToken: string, publishId: string): Promise<object>;
+    freepublishBatchGet?(accessToken: string, offset: number, count: number): Promise<object>;
+    freepublishDelete?(accessToken: string, articleId: string): Promise<object>;
 }
 
 const typedWechatClient = wechatClient as unknown as WechatExtendedClient;
@@ -379,7 +379,7 @@ async function resolveAccessToken(accessToken?: string, appId?: string, appSecre
     const finalAppId = appId || process.env.WECHAT_APP_ID;
     const finalAppSecret = appSecret || process.env.WECHAT_APP_SECRET;
     if (!finalAppId || !finalAppSecret) {
-        throw new Error("missing access_token and missing app_id/app_secret (or env WECHAT_APP_ID/WECHAT_APP_SECRET).");
+        throw new Error("access_token not provided, and app_id/app_secret (or env WECHAT_APP_ID/WECHAT_APP_SECRET) not found.");
     }
 
     if (typeof typedWechatClient.fetchStableAccessToken === "function") {
@@ -394,6 +394,16 @@ function assertNonEmpty(value: string, field: string) {
     if (!value || !value.trim()) {
         throw new Error(`missing required field: ${field}`);
     }
+}
+
+function requireClientMethod<T extends keyof WechatExtendedClient>(name: T): NonNullable<WechatExtendedClient[T]> {
+    const method = typedWechatClient[name];
+    if (typeof method !== "function") {
+        throw new Error(
+            `wenyan-core currently does not expose "${String(name)}". Please use the forked jussker/wenyan-core version that includes this API.`,
+        );
+    }
+    return method as NonNullable<WechatExtendedClient[T]>;
 }
 
 /**
@@ -414,7 +424,8 @@ export async function uploadMaterial(
     const fileBlob = new Blob([buffer]);
     const finalFilename = filename || path.basename(normalizedPath);
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.uploadMaterial(type, fileBlob, finalFilename, finalAccessToken);
+    const uploadMaterialFn = requireClientMethod("uploadMaterial");
+    const data = await uploadMaterialFn(type, fileBlob, finalFilename, finalAccessToken);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -430,7 +441,8 @@ export async function listMaterials(
     appSecret?: string,
 ) {
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.batchGetMaterial(finalAccessToken, type, offset, count);
+    const listMaterialsFn = requireClientMethod("batchGetMaterial");
+    const data = await listMaterialsFn(finalAccessToken, type, offset, count);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -440,7 +452,8 @@ export async function listMaterials(
 export async function deleteMaterial(mediaId: string, accessToken?: string, appId?: string, appSecret?: string) {
     assertNonEmpty(mediaId, "media_id");
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.deleteMaterial(finalAccessToken, mediaId);
+    const deleteMaterialFn = requireClientMethod("deleteMaterial");
+    const data = await deleteMaterialFn(finalAccessToken, mediaId);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -456,7 +469,8 @@ export async function listDrafts(
     appSecret?: string,
 ) {
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.draftBatchGet(finalAccessToken, offset, count, noContent);
+    const listDraftsFn = requireClientMethod("draftBatchGet");
+    const data = await listDraftsFn(finalAccessToken, offset, count, noContent);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -466,7 +480,8 @@ export async function listDrafts(
 export async function getDraft(mediaId: string, accessToken?: string, appId?: string, appSecret?: string) {
     assertNonEmpty(mediaId, "media_id");
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.getDraft(finalAccessToken, mediaId);
+    const getDraftFn = requireClientMethod("getDraft");
+    const data = await getDraftFn(finalAccessToken, mediaId);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -476,7 +491,8 @@ export async function getDraft(mediaId: string, accessToken?: string, appId?: st
 export async function deleteDraft(mediaId: string, accessToken?: string, appId?: string, appSecret?: string) {
     assertNonEmpty(mediaId, "media_id");
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.draftDelete(finalAccessToken, mediaId);
+    const deleteDraftFn = requireClientMethod("draftDelete");
+    const data = await deleteDraftFn(finalAccessToken, mediaId);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -486,7 +502,8 @@ export async function deleteDraft(mediaId: string, accessToken?: string, appId?:
 export async function publishDraft(mediaId: string, accessToken?: string, appId?: string, appSecret?: string) {
     assertNonEmpty(mediaId, "media_id");
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.freepublishSubmit(finalAccessToken, mediaId);
+    const publishDraftFn = requireClientMethod("freepublishSubmit");
+    const data = await publishDraftFn(finalAccessToken, mediaId);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -496,7 +513,8 @@ export async function publishDraft(mediaId: string, accessToken?: string, appId?
 export async function getPublishStatus(publishId: string, accessToken?: string, appId?: string, appSecret?: string) {
     assertNonEmpty(publishId, "publish_id");
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.freepublishGet(finalAccessToken, publishId);
+    const getPublishStatusFn = requireClientMethod("freepublishGet");
+    const data = await getPublishStatusFn(finalAccessToken, publishId);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -511,7 +529,8 @@ export async function listPublished(
     appSecret?: string,
 ) {
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.freepublishBatchGet(finalAccessToken, offset, count);
+    const listPublishedFn = requireClientMethod("freepublishBatchGet");
+    const data = await listPublishedFn(finalAccessToken, offset, count);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
 
@@ -521,6 +540,7 @@ export async function listPublished(
 export async function deletePublished(articleId: string, accessToken?: string, appId?: string, appSecret?: string) {
     assertNonEmpty(articleId, "article_id");
     const finalAccessToken = await resolveAccessToken(accessToken, appId, appSecret);
-    const data = await typedWechatClient.freepublishDelete(finalAccessToken, articleId);
+    const deletePublishedFn = requireClientMethod("freepublishDelete");
+    const data = await deletePublishedFn(finalAccessToken, articleId);
     return buildMcpResponse(JSON.stringify(data, null, 2));
 }
