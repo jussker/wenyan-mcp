@@ -130,10 +130,10 @@ export function createServer(): Server {
                 return await uploadMaterial(
                     String(args.type || ""),
                     String(args.file_path || ""),
-                    String(args.filename || ""),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.filename ? String(args.filename) : undefined,
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_list_materials") {
                 const args = request.params.arguments || {};
@@ -141,17 +141,17 @@ export function createServer(): Server {
                     String(args.type || "news"),
                     Number(args.offset || 0),
                     Number(args.count || 20),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_delete_material") {
                 const args = request.params.arguments || {};
                 return await deleteMaterial(
                     String(args.media_id || ""),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_list_drafts") {
                 const args = request.params.arguments || {};
@@ -159,58 +159,58 @@ export function createServer(): Server {
                     Number(args.offset || 0),
                     Number(args.count || 20),
                     Number(args.no_content || 0),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_get_draft") {
                 const args = request.params.arguments || {};
                 return await getDraft(
                     String(args.media_id || ""),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_delete_draft") {
                 const args = request.params.arguments || {};
                 return await deleteDraft(
                     String(args.media_id || ""),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_publish_draft") {
                 const args = request.params.arguments || {};
                 return await publishDraft(
                     String(args.media_id || ""),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_get_publish_status") {
                 const args = request.params.arguments || {};
                 return await getPublishStatus(
                     String(args.publish_id || ""),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_list_published") {
                 const args = request.params.arguments || {};
                 return await listPublished(
                     Number(args.offset || 0),
                     Number(args.count || 20),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             } else if (request.params.name === "wechat_delete_published") {
                 const args = request.params.arguments || {};
                 return await deletePublished(
                     String(args.article_id || ""),
-                    String(args.access_token || ""),
-                    String(args.app_id || ""),
-                    String(args.app_secret || ""),
+                    args.access_token ? String(args.access_token) : undefined,
+                    args.app_id ? String(args.app_id) : undefined,
+                    args.app_secret ? String(args.app_secret) : undefined,
                 );
             }
 
