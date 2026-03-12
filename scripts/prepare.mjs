@@ -24,11 +24,24 @@ function ensureCoreDist() {
     throw new Error("@wenyan-md/core is not installed in node_modules");
   }
 
+  const localCoreDist = path.join(process.cwd(), "libs", "wenyan-core", "dist");
+
   const requiredFiles = [
     path.join(coreDir, "dist", "wrapper.js"),
     path.join(coreDir, "dist", "wechat.js"),
     path.join(coreDir, "dist", "types", "node", "wrapper.d.ts")
   ];
+
+  // Prefer local submodule artifacts when available, so local fixes override remote tarball dist.
+  if (exists(localCoreDist)) {
+    fs.mkdirSync(path.join(coreDir, "dist"), { recursive: true });
+    fs.cpSync(localCoreDist, path.join(coreDir, "dist"), { recursive: true, force: true });
+    if (requiredFiles.every(exists)) {
+      console.log("[prepare] core dist copied from local submodule");
+      return;
+    }
+    console.warn("[prepare] local submodule dist copy incomplete, falling back to auto-build");
+  }
 
   if (requiredFiles.every(exists)) {
     console.log("[prepare] core dist is ready");
@@ -48,17 +61,6 @@ function ensureCoreDist() {
     });
     if (requiredFiles.every(exists)) {
       console.log("[prepare] core dist generated in node_modules");
-      return;
-    }
-  }
-
-  // Offline-first fallback: reuse local submodule build artifacts if available.
-  const localCoreDist = path.join(process.cwd(), "libs", "wenyan-core", "dist");
-  if (exists(localCoreDist)) {
-    fs.mkdirSync(path.join(coreDir, "dist"), { recursive: true });
-    fs.cpSync(localCoreDist, path.join(coreDir, "dist"), { recursive: true, force: true });
-    if (requiredFiles.every(exists)) {
-      console.log("[prepare] core dist copied from local submodule");
       return;
     }
   }
