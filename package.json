@@ -31,6 +31,7 @@
   },
   "scripts": {
     "build": "pnpm --filter @wenyan-md/core build && tsc",
+    "prepare": "tsc",
     "inspector": "pnpm build && node ./run-inspector.js",
     "test:tools": "pnpm build && node ./tests/listTools.js",
     "test:wechat-validation": "pnpm build && node ./tests/wechatValidation.js",
