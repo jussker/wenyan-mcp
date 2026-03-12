@@ -1,7 +1,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { LIST_THEMES_SCHEMA, REGISTER_THEME_SCHEMA, REMOVE_THEME_SCHEMA } from "./theme.js";
-import { PUBLISH_ARTICLE_SCHEMA, publishArticle } from "./publish.js";
+import { CREATE_DRAFT_SCHEMA, createDraft } from "./publish.js";
 import pkg from "../package.json" with { type: "json" };
 import { buildMcpResponse, globalStates } from "./utils.js";
 import { addTheme, listThemes, removeTheme } from "@wenyan-md/core/wrapper";
@@ -59,7 +59,7 @@ export function createServer(): Server {
     server.setRequestHandler(ListToolsRequestSchema, async () => {
         return {
             tools: [
-                PUBLISH_ARTICLE_SCHEMA,
+                CREATE_DRAFT_SCHEMA,
                 LIST_THEMES_SCHEMA,
                 REGISTER_THEME_SCHEMA,
                 REMOVE_THEME_SCHEMA,
@@ -82,7 +82,7 @@ export function createServer(): Server {
      */
     server.setRequestHandler(CallToolRequestSchema, async (request) => {
         try {
-            if (request.params.name === "publish_article") {
+            if (request.params.name === "create_draft") {
                 if (globalStates.isClientMode && !globalStates.serverUrl) {
                     throw new Error("Missing server URL. Usage: --server <server_url>");
                 }
@@ -91,7 +91,7 @@ export function createServer(): Server {
                 const contentUrl = String(args.content_url || "");
                 const file = String(args.file || "");
                 const themeId = String(args.theme_id || "");
-                return await publishArticle(contentUrl, file, content, themeId, pkg.version);
+                return await createDraft(contentUrl, file, content, themeId, pkg.version);
             } else if (request.params.name === "list_themes") {
                 const themes = await listThemes();
                 const builtinThemes = themes.filter((theme) => theme.isBuiltin);

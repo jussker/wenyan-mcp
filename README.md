@@ -171,6 +171,28 @@ AI回复：
 
 -   `WECHAT_APP_ID`
 -   `WECHAT_APP_SECRET`
+-   `WECHAT_DEFAULT_AUTHOR`（可选，当前文档未配置 frontmatter.author 时作为默认作者）
+-   `WECHAT_CTA_PRE_HEAD`（可选，在首个标题前注入 CTA，支持 Markdown 或 HTML 片段）
+-   `WECHAT_CTA_POST_FOOTNOTE`（可选，在脚注区域后注入 CTA，支持 Markdown 或 HTML 片段）
+
+示例：
+
+```json
+{
+  "mcpServers": {
+    "wenyan-mcp": {
+      "command": "wenyan-mcp",
+      "env": {
+        "WECHAT_APP_ID": "your_app_id",
+        "WECHAT_APP_SECRET": "your_app_secret",
+        "WECHAT_DEFAULT_AUTHOR": "运营团队",
+        "WECHAT_CTA_PRE_HEAD": "> 关注公众号，获取每周实战复盘",
+        "WECHAT_CTA_POST_FOOTNOTE": "<p><strong>行动建议：</strong>回复关键词 <code>模板</code> 获取资料包。</p>"
+      }
+    }
+  }
+}
+```
 
 ### 微信公众号 IP 白名单
 

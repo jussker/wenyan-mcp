@@ -4,3 +4,7 @@ dist/
 *.log
 .env*
 *.tsbuildinfo
+.vscode
+.todo_tasks
+.kms
+tmp/
