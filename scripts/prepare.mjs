@@ -158,6 +158,15 @@ function ensureCoreDist() {
 }
 
 function main() {
+  // When installed from a GitHub tarball that already ships dist/, skip recompilation.
+  // This makes `npx -p github:...` work without devDependencies.
+  const distIndex = path.join(process.cwd(), "dist", "index.js");
+  if (exists(distIndex)) {
+    log("main:dist already present, skip tsc");
+    ensureCoreDist();
+    return;
+  }
+
   log("main:start ensureCoreDist");
   ensureCoreDist();
   log("main:start tsc");
