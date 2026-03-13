@@ -158,12 +158,13 @@ function ensureCoreDist() {
 }
 
 function main() {
-  // When installed from a GitHub tarball that already ships dist/, skip recompilation.
-  // This makes `npx -p github:...` work without devDependencies.
+  // When installed from a GitHub tarball that already ships dist/, skip all setup.
+  // In the npx install context, process.cwd() is node_modules/@wenyan-md/mcp/,
+  // so ensureCoreDist() would look in the wrong place and fail.
+  // Core is handled by its own postinstall; the mcp binary only needs dist/index.js.
   const distIndex = path.join(process.cwd(), "dist", "index.js");
   if (exists(distIndex)) {
-    log("main:dist already present, skip tsc");
-    ensureCoreDist();
+    log("main:dist already present, skip all setup");
     return;
   }
 
