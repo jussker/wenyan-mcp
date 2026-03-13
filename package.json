@@ -19,7 +19,8 @@
     "wenyan-mcp": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "scripts"
   ],
   "homepage": "https://github.com/caol64/wenyan-mcp#readme",
   "repository": {
@@ -32,7 +33,6 @@
   "scripts": {
     "build": "node ./scripts/prepare.mjs",
     "prepare": "node ./scripts/prepare.mjs",
-    "postinstall": "node ./scripts/prepare.mjs",
     "inspector": "pnpm build && node ./run-inspector.js",
     "test:tools": "pnpm build && node ./tests/listTools.js",
     "test:wechat-validation": "pnpm build && node ./tests/wechatValidation.js",
