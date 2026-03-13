@@ -93,6 +93,18 @@ git submodule add https://github.com/jussker/wenyan-core libs/wenyan-core
 
 当 `libs/wenyan-core` 存在时，`@wenyan-md/core` 会优先链接到本地 workspace 包，方便你在一个 monorepo 中联动修改与调试。
 
+### 提交前安全围栏（pre-commit）
+
+仓库内已提供 `.pre-commit-config.yaml`，包含基础格式检查和 `gitleaks` 密钥扫描，可在提交前拦截明显的密钥泄露风险。
+
+```bash
+pipx install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+如你不使用 `pipx`，也可用 `python -m pip install pre-commit` 安装。
+
 ## 基本用法
 
 ### 列出主题
@@ -106,10 +118,10 @@ AI回复：
 ```
 目前我支持的公众号主题包括以下这些，每个主题都有独特的风格和配色，适用于不同的内容调性：
 
-1. **Default（默认）**  
+1. **Default（默认）**
    简洁经典的排版，适合长文阅读，通用性强。
 
-2. **OrangeHeart（橙心）**  
+2. **OrangeHeart（橙心）**
    暖橙色调，优雅而富有活力，适合情感、生活类内容。
 ...
 ```
@@ -153,7 +165,7 @@ AI回复：
 ```
 文章已成功发布至微信公众号草稿箱！🎉
 
-- **主题**：phycat  
+- **主题**：phycat
 - **媒体ID**：xxx
 
 您可登录微信公众号后台，在「草稿箱」中查看并编辑文章，确认无误后即可一键发布。如需进一步排版优化、添加封面或设置摘要，我也可以协助您完成！

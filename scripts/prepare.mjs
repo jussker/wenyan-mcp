@@ -3,28 +3,81 @@ import os from "node:os";
 import path from "node:path";
 import { execSync } from "node:child_process";
 
+function now() {
+  return new Date().toISOString();
+}
+
+function log(message) {
+  console.log(`[prepare][${now()}] ${message}`);
+}
+
 function run(command, cwd = process.cwd(), envExtra = {}) {
-  execSync(command, {
-    cwd,
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      ...envExtra
-    }
-  });
+  const startedAt = Date.now();
+  log(`run:start cwd=${cwd} cmd=${command}`);
+  try {
+    execSync(command, {
+      cwd,
+      stdio: "inherit",
+      env: {
+        ...process.env,
+        ...envExtra
+      }
+    });
+    const elapsedMs = Date.now() - startedAt;
+    log(`run:done  cwd=${cwd} cmd=${command} elapsedMs=${elapsedMs}`);
+  } catch (error) {
+    const elapsedMs = Date.now() - startedAt;
+    log(`run:fail  cwd=${cwd} cmd=${command} elapsedMs=${elapsedMs}`);
+    throw error;
+  }
 }
 
 function exists(filePath) {
   return fs.existsSync(filePath);
 }
 
-function ensureCoreDist() {
-  const coreDir = path.join(process.cwd(), "node_modules", "@wenyan-md", "core");
-  if (!exists(coreDir)) {
-    throw new Error("@wenyan-md/core is not installed in node_modules");
+function buildLocalCoreIfAvailable() {
+  const localCoreRoot = path.join(process.cwd(), "libs", "wenyan-core");
+  const localCorePackage = path.join(localCoreRoot, "package.json");
+  if (!exists(localCorePackage)) {
+    log(`core:local package missing, skip local core build path=${localCorePackage}`);
+    return false;
   }
 
+  log(`core:build local workspace package path=${localCoreRoot}`);
+  run("npm install --ignore-scripts --no-audit --no-fund", localCoreRoot, {
+    PUPPETEER_SKIP_DOWNLOAD: process.env.PUPPETEER_SKIP_DOWNLOAD ?? "1"
+  });
+  run("npm run build", localCoreRoot, {
+    PUPPETEER_SKIP_DOWNLOAD: process.env.PUPPETEER_SKIP_DOWNLOAD ?? "1"
+  });
+
+  const localCoreDist = path.join(localCoreRoot, "dist");
+  const hasLocalCoreDist = exists(localCoreDist);
+  log(`core:build local done dist=${localCoreDist} exists=${hasLocalCoreDist}`);
+  return hasLocalCoreDist;
+}
+
+function ensureCoreDist() {
+  const coreDir = path.join(process.cwd(), "node_modules", "@wenyan-md", "core");
+  log(`core:check node_modules path=${coreDir}`);
+  if (!exists(coreDir)) {
+    log("core:missing in node_modules; bootstrap install deps with ignore-scripts");
+    run("npm install --ignore-scripts --no-audit --no-fund", process.cwd(), {
+      PUPPETEER_SKIP_DOWNLOAD: process.env.PUPPETEER_SKIP_DOWNLOAD ?? "1"
+    });
+    if (exists(coreDir)) {
+      log("core:bootstrap install completed and core is now available");
+    } else {
+      throw new Error("@wenyan-md/core is not installed in node_modules after bootstrap install");
+    }
+  }
+
+  buildLocalCoreIfAvailable();
+
   const localCoreDist = path.join(process.cwd(), "libs", "wenyan-core", "dist");
+  const hasLocalCoreDist = exists(localCoreDist);
+  log(`core:check local dist path=${localCoreDist} exists=${hasLocalCoreDist}`);
 
   const requiredFiles = [
     path.join(coreDir, "dist", "wrapper.js"),
@@ -33,25 +86,27 @@ function ensureCoreDist() {
   ];
 
   // Prefer local submodule artifacts when available, so local fixes override remote tarball dist.
-  if (exists(localCoreDist)) {
+  if (hasLocalCoreDist) {
+    log("core:branch local-submodule-dist");
     fs.mkdirSync(path.join(coreDir, "dist"), { recursive: true });
     fs.cpSync(localCoreDist, path.join(coreDir, "dist"), { recursive: true, force: true });
     if (requiredFiles.every(exists)) {
-      console.log("[prepare] core dist copied from local submodule");
-      return;
+      log("core:ready copied from local submodule");
+      return true;
     }
     console.warn("[prepare] local submodule dist copy incomplete, falling back to auto-build");
   }
 
   if (requiredFiles.every(exists)) {
-    console.log("[prepare] core dist is ready");
-    return;
+    log("core:ready already present in installed package");
+    return true;
   }
 
   console.warn("[prepare] core dist missing, attempting auto-build");
 
   const coreSrcDir = path.join(coreDir, "src");
   if (exists(coreSrcDir)) {
+    log(`core:branch build-in-node_modules src=${coreSrcDir}`);
     // Build in-place when source code is present in node_modules package.
     run("npm install --include=dev --no-audit --no-fund", coreDir, {
       PUPPETEER_SKIP_DOWNLOAD: process.env.PUPPETEER_SKIP_DOWNLOAD ?? "1"
@@ -60,14 +115,15 @@ function ensureCoreDist() {
       PUPPETEER_SKIP_DOWNLOAD: process.env.PUPPETEER_SKIP_DOWNLOAD ?? "1"
     });
     if (requiredFiles.every(exists)) {
-      console.log("[prepare] core dist generated in node_modules");
-      return;
+      log("core:ready generated in node_modules");
+      return true;
     }
   }
 
   // Fallback: clone fork repo, build dist, then copy dist into installed package.
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wenyan-core-build-"));
   const cloneDir = path.join(tempRoot, "wenyan-core");
+  log(`core:branch fallback-clone tempRoot=${tempRoot}`);
 
   try {
     run("git clone --depth 1 https://github.com/jussker/wenyan-core " + cloneDir);
@@ -93,15 +149,26 @@ function ensureCoreDist() {
       throw new Error("core dist copy incomplete after fallback build");
     }
 
-    console.log("[prepare] core dist generated from fork fallback build");
+    log("core:ready generated from fork fallback build");
+    return true;
   } finally {
+    log(`core:cleanup tempRoot=${tempRoot}`);
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 }
 
 function main() {
+  log("main:start ensureCoreDist");
   ensureCoreDist();
-  run("npx tsc -p tsconfig.json --pretty false");
+  log("main:start tsc");
+  const localTscBin = path.join(process.cwd(), "node_modules", ".bin", "tsc");
+  if (exists(localTscBin)) {
+    run(`\"${localTscBin}\" -p tsconfig.json --pretty false`);
+  } else {
+    log("main:tsc bin missing in node_modules, fallback to npm exec typescript");
+    run("npm exec --yes --package=typescript -- tsc -p tsconfig.json --pretty false");
+  }
+  log("main:done");
 }
 
 main();
