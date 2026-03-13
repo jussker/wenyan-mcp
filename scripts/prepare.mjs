@@ -161,12 +161,20 @@ function main() {
   log("main:start ensureCoreDist");
   ensureCoreDist();
   log("main:start tsc");
+  // Delete stale tsbuildinfo to force full JS emit on every build.
+  // With composite:true, tsc stores tsbuildinfo at tsconfig path root (not outDir).
+  // Without cleanup tsc sees "up to date" and emits nothing (exit 0, no output).
+  const tsBuildInfoPath = path.join(process.cwd(), "tsconfig.tsbuildinfo");
+  if (exists(tsBuildInfoPath)) {
+    fs.rmSync(tsBuildInfoPath);
+    log("main:cleaned stale tsbuildinfo");
+  }
   const localTscBin = path.join(process.cwd(), "node_modules", ".bin", "tsc");
   if (exists(localTscBin)) {
-    run(`\"${localTscBin}\" -p tsconfig.json --pretty false`);
+    run(`\"${localTscBin}\" -p tsconfig.json --pretty false --emitDeclarationOnly false`);
   } else {
     log("main:tsc bin missing in node_modules, fallback to npm exec typescript");
-    run("npm exec --yes --package=typescript -- tsc -p tsconfig.json --pretty false");
+    run("npm exec --yes --package=typescript -- tsc -p tsconfig.json --pretty false --emitDeclarationOnly false");
   }
   log("main:done");
 }
