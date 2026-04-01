@@ -36,6 +36,11 @@ function exists(filePath) {
   return fs.existsSync(filePath);
 }
 
+function isInstalledPackageContext() {
+  const cwd = process.cwd();
+  return cwd.includes(`${path.sep}node_modules${path.sep}@wenyan-md${path.sep}mcp`);
+}
+
 function buildLocalCoreIfAvailable() {
   const localCoreRoot = path.join(process.cwd(), "libs", "wenyan-core");
   const localCorePackage = path.join(localCoreRoot, "package.json");
@@ -158,13 +163,11 @@ function ensureCoreDist() {
 }
 
 function main() {
-  // When installed from a GitHub tarball that already ships dist/, skip all setup.
-  // In the npx install context, process.cwd() is node_modules/@wenyan-md/mcp/,
-  // so ensureCoreDist() would look in the wrong place and fail.
-  // Core is handled by its own postinstall; the mcp binary only needs dist/index.js.
+  // Only skip setup for installed package context (node_modules path).
+  // In repo development context, always rebuild to keep src and dist consistent.
   const distIndex = path.join(process.cwd(), "dist", "index.js");
-  if (exists(distIndex)) {
-    log("main:dist already present, skip all setup");
+  if (exists(distIndex) && isInstalledPackageContext()) {
+    log("main:dist already present in installed package context, skip setup");
     return;
   }
 

@@ -14,6 +14,7 @@ const nodeHttpAdapter = {
         return {
             body: Readable.from(encoder),
             headers: encoder.headers,
+            duplex: "half",
         };
     },
 };
