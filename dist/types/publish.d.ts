@@ -1,3 +1,13 @@
+export interface CreateDraftOptions {
+    contentBaseDir?: string;
+    mermaid?: boolean;
+    mermaidPpi?: number;
+    mermaidRenderScale?: number;
+}
+export interface CreateDraftAnchorResolution {
+    file?: string;
+    source: "file" | "content_base_dir" | "content_url" | "cwd" | "none";
+}
 /**
  * MCP 工具：渲染 Markdown 并存入公众号草稿箱。
  *
@@ -25,12 +35,44 @@ export declare const CREATE_DRAFT_SCHEMA: {
                 readonly type: "string";
                 readonly description: "The local path (absolute or relative) to a Markdown file. Preferred over 'content' for large files to save tokens.";
             };
+            readonly content_base_dir: {
+                readonly type: "string";
+                readonly description: "Base directory used to resolve relative image paths when 'content' is provided directly. Example: /Users/you/project/docs";
+            };
             readonly theme_id: {
                 readonly type: "string";
                 readonly description: "ID of the theme to use (e.g., default, orangeheart, rainbow, lapis, pie, maize, purple, phycat, meridian, meridian_night).";
             };
+            readonly mermaid: {
+                readonly type: "boolean";
+                readonly description: "Enable or disable Mermaid rendering in markdown.";
+            };
+            readonly mermaid_ppi: {
+                readonly type: "number";
+                readonly description: "PPI used for Mermaid image rendering.";
+            };
+            readonly mermaid_render_scale: {
+                readonly type: "number";
+                readonly description: "Render scale used for Mermaid screenshot capture.";
+            };
         };
     };
+};
+export declare function resolveCreateDraftAnchor(content: string, contentBaseDir?: string, file?: string, contentUrl?: string): CreateDraftAnchorResolution;
+export declare function getCreateDraftBaseResolutionMessage(content: string, anchor: CreateDraftAnchorResolution): string | undefined;
+export declare function buildCreateDraftPublishOptions(content: string, contentUrl: string, file: string, themeId: string, clientVersion?: string, options?: CreateDraftOptions): {
+    file: string | undefined;
+    theme: string;
+    highlight: string;
+    macStyle: boolean;
+    footnote: boolean;
+    server: string | undefined;
+    apiKey: string | undefined;
+    clientVersion: string | undefined;
+    disableStdin: boolean;
+    mermaid: boolean | undefined;
+    mermaidPpi: number | undefined;
+    mermaidRenderScale: number | undefined;
 };
 /**
  * 渲染 Markdown 并存入公众号草稿箱。
@@ -42,7 +84,7 @@ export declare const CREATE_DRAFT_SCHEMA: {
  * @param clientVersion - 可选客户端版本。
  * @returns MCP 文本响应对象。
  */
-export declare function createDraft(contentUrl: string, file: string, content: string, themeId: string, clientVersion?: string): Promise<{
+export declare function createDraft(contentUrl: string, file: string, content: string, themeId: string, clientVersion?: string, options?: CreateDraftOptions): Promise<{
     content: {
         type: string;
         text: string;

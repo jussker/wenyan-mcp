@@ -69,12 +69,15 @@ export async function getInputContent(
     file?: string,
 ): Promise<{ content: string; absoluteDirPath: string | undefined }> {
     let absoluteDirPath: string | undefined = undefined;
+    const normalizePath = file ? getNormalizeFilePath(file) : undefined;
+
+    if (normalizePath) {
+        absoluteDirPath = path.dirname(normalizePath);
+    }
 
     // 2. 尝试从文件读取
-    if (!inputContent && file) {
-        const normalizePath = getNormalizeFilePath(file);
+    if (!inputContent && normalizePath) {
         inputContent = await fs.readFile(normalizePath, "utf-8");
-        absoluteDirPath = path.dirname(normalizePath);
     }
 
     // 3. 校验输入

@@ -64,7 +64,16 @@ export function createServer() {
                 const contentUrl = String(args.content_url || "");
                 const file = String(args.file || "");
                 const themeId = String(args.theme_id || "");
-                return await createDraft(contentUrl, file, content, themeId, pkg.version);
+                const contentBaseDir = String(args.content_base_dir || "");
+                const mermaid = typeof args.mermaid === "boolean" ? args.mermaid : undefined;
+                const mermaidPpi = typeof args.mermaid_ppi === "number" ? args.mermaid_ppi : undefined;
+                const mermaidRenderScale = typeof args.mermaid_render_scale === "number" ? args.mermaid_render_scale : undefined;
+                return await createDraft(contentUrl, file, content, themeId, pkg.version, {
+                    contentBaseDir,
+                    mermaid,
+                    mermaidPpi,
+                    mermaidRenderScale,
+                });
             }
             else if (request.params.name === "list_themes") {
                 const themes = await listThemes();

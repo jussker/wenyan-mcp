@@ -1,4 +1,5 @@
 import { renderAndPublish, renderAndPublishToServer } from "@wenyan-md/core/wrapper";
+import path from "node:path";
 import { buildMcpResponse, getInputContent, globalStates } from "./utils.js";
 /**
  * MCP 工具：渲染 Markdown 并存入公众号草稿箱。
@@ -48,13 +49,90 @@ Inline images in the article body are also supported and will be auto-uploaded t
                 type: "string",
                 description: "The local path (absolute or relative) to a Markdown file. Preferred over 'content' for large files to save tokens.",
             },
+            content_base_dir: {
+                type: "string",
+                description: "Base directory used to resolve relative image paths when 'content' is provided directly. Example: /Users/you/project/docs",
+            },
             theme_id: {
                 type: "string",
                 description: "ID of the theme to use (e.g., default, orangeheart, rainbow, lapis, pie, maize, purple, phycat, meridian, meridian_night).",
             },
+            mermaid: {
+                type: "boolean",
+                description: "Enable or disable Mermaid rendering in markdown.",
+            },
+            mermaid_ppi: {
+                type: "number",
+                description: "PPI used for Mermaid image rendering.",
+            },
+            mermaid_render_scale: {
+                type: "number",
+                description: "Render scale used for Mermaid screenshot capture.",
+            },
         },
     },
 };
+function hasRelativeImageReference(content) {
+    const markdownRelativeImage = /!\[[^\]]*\]\((?!https?:\/\/|data:|\/|file:|#)[^)]+\)/;
+    const wikiImage = /!\[\[[^\]]+\]\]/;
+    return markdownRelativeImage.test(content) || wikiImage.test(content);
+}
+export function resolveCreateDraftAnchor(content, contentBaseDir, file, contentUrl) {
+    if (file) {
+        return {
+            file,
+            source: "file",
+        };
+    }
+    if (contentBaseDir) {
+        return {
+            file: path.join(contentBaseDir, "__virtual__.md"),
+            source: "content_base_dir",
+        };
+    }
+    if (contentUrl) {
+        return {
+            file: contentUrl,
+            source: "content_url",
+        };
+    }
+    if (!content) {
+        return {
+            source: "none",
+        };
+    }
+    const cwd = process.cwd();
+    return {
+        file: path.join(cwd, "__content__.md"),
+        source: "cwd",
+    };
+}
+export function getCreateDraftBaseResolutionMessage(content, anchor) {
+    if (anchor.source === "cwd" && hasRelativeImageReference(content)) {
+        return `Detected relative image paths in direct 'content' mode. Using process.cwd() as baseDir: ${process.cwd()}. If images are not resolved, pass 'content_base_dir' or use 'file'.`;
+    }
+    if (anchor.source === "none" && hasRelativeImageReference(content)) {
+        throw new Error("Cannot resolve relative image paths: missing base reference. Provide 'content_base_dir', 'file', or 'content_url'.");
+    }
+    return undefined;
+}
+export function buildCreateDraftPublishOptions(content, contentUrl, file, themeId, clientVersion, options = {}) {
+    const anchor = resolveCreateDraftAnchor(content, options.contentBaseDir, file, contentUrl);
+    return {
+        file: anchor.file,
+        theme: themeId,
+        highlight: "solarized-light",
+        macStyle: true,
+        footnote: true,
+        server: globalStates.serverUrl,
+        apiKey: globalStates.apiKey,
+        clientVersion,
+        disableStdin: true,
+        mermaid: options.mermaid,
+        mermaidPpi: options.mermaidPpi,
+        mermaidRenderScale: options.mermaidRenderScale,
+    };
+}
 /**
  * 渲染 Markdown 并存入公众号草稿箱。
  *
@@ -65,24 +143,16 @@ Inline images in the article body are also supported and will be auto-uploaded t
  * @param clientVersion - 可选客户端版本。
  * @returns MCP 文本响应对象。
  */
-export async function createDraft(contentUrl, file, content, themeId, clientVersion) {
+export async function createDraft(contentUrl, file, content, themeId, clientVersion, options = {}) {
     let mediaId = "";
-    const publishOptions = {
-        file: file ? file : contentUrl,
-        theme: themeId,
-        highlight: "solarized-light",
-        macStyle: true,
-        footnote: true,
-        server: globalStates.serverUrl,
-        apiKey: globalStates.apiKey,
-        clientVersion,
-        disableStdin: true,
-    };
+    const anchor = resolveCreateDraftAnchor(content, options.contentBaseDir, file, contentUrl);
+    const baseResolutionMessage = getCreateDraftBaseResolutionMessage(content, anchor);
+    const publishOptions = buildCreateDraftPublishOptions(content, contentUrl, file, themeId, clientVersion, options);
     if (globalStates.isClientMode) {
         mediaId = await renderAndPublishToServer(content, publishOptions, getInputContent);
     }
     else {
         mediaId = await renderAndPublish(content, publishOptions, getInputContent);
     }
-    return buildMcpResponse(`Your article was successfully saved to '公众号草稿箱' as a draft. The media ID is ${mediaId}. Use 'wechat_publish_draft' to publish it.`);
+    return buildMcpResponse(`Your article was successfully saved to '公众号草稿箱' as a draft. The media ID is ${mediaId}. Use 'wechat_publish_draft' to publish it.${baseResolutionMessage ? ` ${baseResolutionMessage}` : ""}`);
 }

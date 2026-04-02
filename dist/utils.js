@@ -56,11 +56,13 @@ export const globalStates = new GlobalStates();
  */
 export async function getInputContent(inputContent, file) {
     let absoluteDirPath = undefined;
-    // 2. 尝试从文件读取
-    if (!inputContent && file) {
-        const normalizePath = getNormalizeFilePath(file);
-        inputContent = await fs.readFile(normalizePath, "utf-8");
+    const normalizePath = file ? getNormalizeFilePath(file) : undefined;
+    if (normalizePath) {
         absoluteDirPath = path.dirname(normalizePath);
+    }
+    // 2. 尝试从文件读取
+    if (!inputContent && normalizePath) {
+        inputContent = await fs.readFile(normalizePath, "utf-8");
     }
     // 3. 校验输入
     if (!inputContent) {
